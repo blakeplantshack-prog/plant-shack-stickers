@@ -281,7 +281,7 @@ function choose(i,keepFocus){
 
 /* ---------------- the sticker (drawn at the GK420t's 203 dpi: 320 x 224 dots) ---------------- */
 const W=320,H=224,DPMM=203/25.4,FONT='"TagSans",Arial,sans-serif';
-const PRICE_SCALE=0.9; // price size: 1 = as big as fits, 0.9 = 10% smaller
+const PRICE_SCALE=0.81; // price size: 1 = as big as fits, 0.81 = two 10% steps smaller
 // Draw the sticker artwork. S = how many canvas pixels per printer dot (1 dot = 1/203 inch).
 function drawArt(it,S){
   const c=document.createElement("canvas");c.width=W*S;c.height=H*S;const x=c.getContext("2d");
