@@ -281,6 +281,7 @@ function choose(i,keepFocus){
 
 /* ---------------- the sticker (drawn at the GK420t's 203 dpi: 320 x 224 dots) ---------------- */
 const W=320,H=224,DPMM=203/25.4,FONT='"TagSans",Arial,sans-serif';
+const PRICE_SCALE=0.9; // price size: 1 = as big as fits, 0.9 = 10% smaller
 // Draw the sticker artwork. S = how many canvas pixels per printer dot (1 dot = 1/203 inch).
 function drawArt(it,S){
   const c=document.createElement("canvas");c.width=W*S;c.height=H*S;const x=c.getContext("2d");
@@ -303,6 +304,7 @@ function drawArt(it,S){
     const [dl,ct]=it.p.toFixed(2).split("."),showC=ct!=="00";let P=Math.min(maxP,(bottom-top)/0.72),wd,wc,w$;
     for(let k=0;k<30;k++){wd=meas(dl,P,500,-P*0.02);wc=showC?meas("."+ct,P*0.46,500,0):0;w$=meas("$",P*0.48,400,0);
       if(w$+2+wd+(showC?2:0)+wc<=pw)break;P*=0.95}
+    P*=PRICE_SCALE;wd=meas(dl,P,500,-P*0.02);wc=showC?meas("."+ct,P*0.46,500,0):0;w$=meas("$",P*0.48,400,0);
     const cap=P*0.72,total=w$+2+wd+(showC?2:0)+wc;let lx=align==="right"?x0+pw-total:align==="left"?x0:x0+(pw-total)/2;const base=Math.round((top+bottom+cap)/2);
     text("$",P*0.48,400,0,lx,base-cap+P*0.48*0.72,"left");lx+=w$+2;
     x.font=`500 ${P*S}px ${FONT}`;x.letterSpacing=(-P*0.02*S)+"px";x.fillText(dl,lx*S,base*S);x.letterSpacing="0px";lx+=wd+2;
