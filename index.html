@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Shack Stickers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: search column on the left, sticker preview + print list on the right; stacks on phones */
+:root{
+  --bg:#f3f5f0; --panel:#ffffff; --ink:#1d261f; --muted:#5f6b61; --line:#d9e0d6;
+  --leaf:#2f6b3a; --leaf-ink:#ffffff; --leaf-soft:#e3eee2; --warn:#a4561b; --hit:#fff3c4;
+  --ui:"Archivo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a15; --panel:#1c241e; --ink:#e7ede6; --muted:#9aa89b; --line:#2f3b31;
+  --leaf:#6fbf7c; --leaf-ink:#0f1a11; --leaf-soft:#243a28; --warn:#e8a065; --hit:#4a4320; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a15; --panel:#1c241e; --ink:#e7ede6; --muted:#9aa89b; --line:#2f3b31;
+  --leaf:#6fbf7c; --leaf-ink:#0f1a11; --leaf-soft:#243a28; --warn:#e8a065; --hit:#4a4320; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.4 var(--ui)}
+button,input,select{font:inherit;color:inherit}
+header.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);background:var(--panel)}
+header.top h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.01em}
+header.top h1 span{color:var(--leaf)}
+.stockinfo{color:var(--muted);font-size:13px;margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;padding:16px max(16px,env(safe-area-inset-right)) 32px max(16px,env(safe-area-inset-left));max-width:1400px;margin:0 auto}
+@media (max-width:860px){main{grid-template-columns:minmax(0,1fr)}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+h2{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+#q{width:100%;font-size:20px;padding:12px 14px;border:2px solid var(--line);border-radius:8px;background:var(--bg);outline:none}
+#q:focus{border-color:var(--leaf)}
+.hint{color:var(--muted);font-size:13px;margin:8px 0 0}
+.empty{color:var(--muted);padding:20px 6px}
+.right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.previewbox{display:flex;justify-content:center;align-items:center;background:repeating-linear-gradient(45deg,var(--bg) 0 8px,var(--panel) 8px 16px);border-radius:8px;padding:18px;min-height:150px;overflow:hidden}
+.previewbox .label{box-shadow:0 1px 4px rgba(0,0,0,.25);transform-origin:center}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.qty button{border:0;background:var(--bg);width:38px;height:40px;font-size:20px;cursor:pointer}
+.qty input{width:56px;height:40px;border:0;text-align:center;background:var(--panel);font-variant-numeric:tabular-nums;font-size:17px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--leaf);border-color:var(--leaf);color:var(--leaf-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+#results{list-style:none;margin:12px 0 0;padding:2px;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;max-height:calc(100vh - 250px);min-height:240px;overflow:auto;align-content:start}
+#results li{border:1px solid var(--line);border-radius:8px;padding:10px 6px 8px;text-align:center;cursor:pointer;background:var(--panel)}
+#results li:hover{border-color:var(--leaf)}
+#results li.sel{background:var(--leaf);border-color:var(--leaf);color:var(--leaf-ink)}
+#results .p{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+#results .m{display:block;font-family:var(--mono);font-size:11px;opacity:.7;margin-top:2px}
+#results li.empty{grid-column:1/-1;text-align:left;border:0;cursor:default;background:none}
+.btn:focus-visible,#results li:focus-visible{outline:3px solid var(--leaf);outline-offset:2px}
+#queue{list-style:none;margin:0;padding:0}
+#queue li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+#queue .d{overflow-wrap:anywhere}
+#queue .m{display:block;font-family:var(--mono);font-size:12px;color:var(--muted)}
+#queue input{width:54px;padding:5px;border:1px solid var(--line);border-radius:6px;background:var(--bg);text-align:center}
+#queue .x{border:0;background:none;cursor:pointer;color:var(--muted);font-size:18px}
+.settings{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px;align-items:center;font-size:14px}
+.settings select,.settings input[type=number]{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.settings input[type=number]{width:72px}
+.muted{color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.linkbtn{background:none;border:0;color:var(--leaf);text-decoration:underline;cursor:pointer;padding:0;font-size:13px}
+
+/* ---------- the sticker itself (sized in mm, black on white always) ---------- */
+@font-face{font-family:"TagSans";src:url(data:font/woff2;base64,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) format("woff2");font-weight:300 900;font-style:normal}
+.label{background:#fff;overflow:hidden;width:40mm;height:28mm}
+.label img{display:block;width:40mm;height:28mm}
+.previewbox img{display:block;box-shadow:0 1px 4px rgba(0,0,0,.25);max-width:100%;height:auto}
+#printArea{position:fixed;left:-10000px;top:0}
+@media print{body{background:#fff}header.top,main,.toast{display:none!important}#printArea{position:static}
+  #printArea .label{break-after:page;page-break-after:always}#printArea .label:last-child{break-after:auto;page-break-after:auto}}
+.linkbtn:disabled{opacity:.5;cursor:wait}
+.pstat{display:flex;align-items:center;gap:8px;font-weight:600}
+.pstat::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.pstat.ok::before{background:var(--leaf)}
+.pstat.bad::before{background:var(--warn)}
+</style>
+<style>@page{size:40mm 28mm;margin:0}</style>
+</head>
+<body>
+<!--TRIALBANNER--><header class="top">
+  <h1>The Plant Shack <span>Stickers</span></h1>
+  <div class="stockinfo">
+    <span id="stockInfo"></span>
+    <button class="linkbtn" id="loadCsvBtn" type="button">Load a newer stock export</button>
+    <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+  </div>
+</header>
+
+<main>
+  <section aria-labelledby="h-search">
+    <h2 id="h-search">Pick a plant price</h2>
+    <input id="q" type="search" autocomplete="off" inputmode="decimal" placeholder="Type a price, e.g. 14.95" autofocus>
+    <p class="hint">These are the “PLANT $” prices in the till. If a price isn't here, add it in the POS first, then load a new export.</p>
+    <ul id="results" aria-live="polite"></ul>
+  </section>
+
+  <div class="right">
+    <section aria-labelledby="h-sticker">
+      <h2 id="h-sticker">Sticker</h2>
+      <div class="previewbox" id="preview"><span class="muted">Pick a price to see its sticker</span></div>
+      <div class="row">
+        <div class="qty" aria-label="Number of stickers">
+          <button type="button" id="minus" aria-label="One fewer">−</button>
+          <input id="qty" type="number" min="1" max="500" value="1" inputmode="numeric">
+          <button type="button" id="plus" aria-label="One more">+</button>
+        </div>
+        <button class="btn primary" id="printNow" type="button" disabled>Print now</button>
+        <button class="btn" id="addQueue" type="button" disabled>Add to print list</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-queue">
+      <h2 id="h-queue">Print list</h2>
+      <ul id="queue"></ul>
+      <p class="muted" id="queueEmpty" style="margin:0">Nothing here yet. Use “Add to print list” to build up a batch, for example a new delivery.</p>
+      <div class="row">
+        <button class="btn primary" id="printQueue" type="button" disabled>Print list</button>
+        <button class="btn" id="clearQueue" type="button" disabled>Clear</button>
+        <span class="muted" id="queueCount"></span>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-printer">
+      <h2 id="h-printer">Printer</h2>
+      <p id="printerStatus" class="pstat" style="margin:0">Looking for the Zebra printer…</p>
+      <p id="printerDetail" class="hint" hidden></p>
+      <div class="settings" id="pickRow" hidden style="margin-top:10px"><label for="printerPick">Sticker printer</label><select id="printerPick"></select></div>
+      <div class="row"><button class="btn" id="fallback" type="button" hidden>Print with the print box instead</button></div>
+      <p class="hint">Stickers go straight to the Zebra GK420t through Zebra Browser Print. Keep Browser Print running on this computer. <button class="linkbtn" id="recheck" type="button">Check again</button></p>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+<div id="printArea" aria-hidden="true"></div>
+<!--TRIAL-->
+
+<script>
+/* Stock embedded from the POS export: [barcode, description, department, retail price, supplier, date last sold] */
+const EMBEDDED = {source:"Stock export 26/10/26 08:35", items:[["20178239","PLANT $1","Plants",1.0,"GROWING AREA","06/10/2026"],["30028708","PLANT $1.50","Plants",1.5,"","22/12/2024"],["20179779","PLANT $2","Plants",2.0,"","10/12/2025"],["30038707","PLANT $2.50","Plants",2.5,"","05/07/2025"],["20181635","PLANT $2.95","Plants",2.95,"","21/02/2023"],["20173210","PLANT $2.99","Plants",2.99,"GROWING AREA","30/09/2022"],["20177454","PLANT $3","Plants",3.0,"BLACKALL","25/05/2026"],["20176600","PLANT $3.49","Plants",3.49,"ZOOM GARDEN","04/10/2020"],["20177683","plant $3.50","Plants",3.5,"","10/12/2025"],["20175481","PLANT $3.99","Plants",3.99,"TARA VALLEY","05/01/2025"],["20177942","PLANT $4.50","Plants",4.5,"BLACKALL","27/06/2021"],["30000506","PLANT $4.80","Plants",4.8,"",""],["20174354","PLANT $4.95","Plants",4.95,"GROWING AREA","05/10/2026"],["20175160","PLANT $4.99","Plants",4.99,"GROWING AREA","25/10/2026"],["20177430","PLANT $5.45","Plants",5.45,"BLACKALL","28/09/2018"],["20177836","PLANT $5.50","Plants",5.5,"","19/10/2023"],["20173197","PLANT $5.95","Plants",5.95,"GROWING AREA","25/10/2026"],["20175436","PLANT $5.99","Plants",5.99,"","02/09/2026"],["20177096","PLANT $6","Plants",6.0,"","25/10/2026"],["20181123","PLANT $6.50","Plants",6.5,"","25/02/2024"],["20173180","PLANT $6.95","Plants",6.95,"GROWING AREA","25/10/2026"],["20180164","PLANT $6.99","Plants",6.99,"GROWING AREA","15/06/2023"],["20177072","PLANT $7","Plants",7.0,"","14/10/2026"],["20179090","PLANT $7.50","Plants",7.5,"","25/10/2026"],["20173173","PLANT $7.95","Plants",7.95,"GROWING AREA","25/10/2026"],["20181383","PLANT $7.99","Plants",7.99,"","25/10/2026"],["20177102","PLANT $8","Plants",8.0,"","17/10/2026"],["20181437","PLANT $8.50","Plants",8.5,"","21/02/2023"],["20173135","PLANT $8.95","Plants",8.95,"GROWING AREA","25/10/2026"],["20180317","PLANT $8.99","Plants",8.99,"","27/08/2026"],["20173487","PLANT $9","Plants",9.0,"MALMAR ENTERPRISES","24/10/2026"],["20181444","PLANT $9.50","Plants",9.5,"","14/02/2026"],["20173128","PLANT $9.95","Plants",9.95,"GROWING AREA","25/10/2026"],["20177652","PLANT $9.99","Plants",9.99,"GROWING AREA","08/05/2025"],["20177010","PLANT $10","Plants",10.0,"","25/10/2026"],["20173159","PLANT $10.95","Plants",10.95,"GROWING AREA","25/10/2026"],["20177317","PLANT $11","Plants",11.0,"GROWING AREA","12/09/2026"],["20179106","PLANT $11.25","Plants",11.25,"",""],["20173142","PLANT $11.95","Plants",11.95,"GROWING AREA","25/10/2026"],["20182724","PLANT $11.99","Plants",11.99,"","28/04/2021"],["20177126","PLANT $12","Plants",12.0,"GROWING AREA","18/10/2026"],["20183028","PLANT $12.50","Plants",12.5,"","11/05/2026"],["20179489","PLANT $12.95","Plants",12.95,"","25/10/2026"],["20178567","PLANT $13","Plants",13.0,"GROWING AREA","30/03/2026"],["20183332","PLANT $13.50","Plants",13.5,"","29/08/2026"],["20173425","PLANT $13.95","Plants",13.95,"GROWING AREA","25/10/2026"],["20182892","PLANT $13.99","Plants",13.99,"","21/08/2021"],["20177225","PLANT $14","Plants",14.0,"GROWING AREA","18/10/2026"],["30034242","PLANT $14.50","Plants",14.5,"","17/09/2026"],["20173524","PLANT $14.95","Plants",14.95,"GROWING AREA","25/10/2026"],["20174033","PLANT $15","Plants",15.0,"GROWING AREA","28/08/2026"],["30053939","Plant $15.50","Plants",15.5,"","29/09/2026"],["20176754","PLANT $15.95","Plants",15.95,"","25/10/2026"],["20177119","PLANT $16","Plants",16.0,"","18/10/2026"],["30001077","PLANT $16.50","Plants",16.5,"","18/10/2026"],["20173319","PLANT $16.95","Plants",16.95,"GROWING AREA","25/10/2026"],["20177829","PLANT $16.99","Plants",16.99,"","02/05/2022"],["20177355","PLANT $17","Plants",17.0,"","27/09/2026"],["30000872","PLANT $17.50","Plants",17.5,"","11/10/2026"],["20174316","PLANT $17.95","Plants",17.95,"GROWING AREA","25/10/2026"],["20177263","PLANT $18","Plants",18.0,"GROWING AREA","28/06/2026"],["30053861","PLANT $18.50","Plants",18.5,"GROWING AREA","06/10/2026"],["30053908","PLANT $18.65","Plants",18.65,"GROWING AREA","17/10/2026"],["20175863","PLANT $18.95","Plants",18.95,"ZOOM GARDEN","25/10/2026"],["20182885","PLANT $18.99","Plants",18.99,"","09/07/2022"],["20177256","PLANT $19","Plants",19.0,"GROWING AREA","25/10/2026"],["30003460","PLANT $19.50","Plants",19.5,"","15/10/2022"],["20173845","PLANT $19.95","Plants",19.95,"GROWING AREA","25/10/2026"],["20177690","PLANT $20","Plants",20.0,"BLACKALL","29/08/2026"],["20177379","PLANT $21","Plants",21.0,"GROWING AREA","09/04/2026"],["20174064","PLANT $21.95","Plants",21.95,"GROWING AREA","26/10/2026"],["20177386","PLANT $22","Plants",22.0,"GROWING AREA","09/10/2026"],["30053915","PLANT $22.50","Plants",22.5,"GROWING AREA","07/08/2026"],["20179144","PLANT $22.95","Plants",22.95,"","25/10/2026"],["20177393","PLANT $23","Plants",23.0,"GROWING AREA","06/01/2026"],["20174071","PLANT $23.95","Plants",23.95,"GROWING AREA","21/10/2026"],["20177324","PLANT $24","Plants",24.0,"GROWING AREA","14/10/2026"],["30052888","Plant $24.50","Plants",24.5,"GROWING AREA","16/09/2026"],["20173432","PLANT $24.95","Plants",24.95,"GROWING AREA","25/10/2026"],["20182700","PLANT $24.99","Plants",24.99,"","21/10/2023"],["20177362","PLANT $25","Plants",25.0,"GROWING AREA","10/05/2026"],["30003415","Plant $25.95","Plants",25.95,"","16/07/2023"],["30052727","PLANT $26.50","Plants",26.5,"GROWING AREA","07/10/2026"],["20173555","PLANT $26.95","Plants",26.95,"GROWING AREA","25/10/2026"],["20177409","PLANT $27","Plants",27.0,"GROWING AREA","16/04/2023"],["20183295","PLANT $27.50","Plants",27.5,"","06/03/2022"],["20180188","PLANT $27.95","Plants",27.95,"","25/10/2026"],["20177416","PLANT $28","Plants",28.0,"GROWING AREA","02/09/2023"],["30001664","PLANT $28.95","Plants",28.95,"","25/10/2026"],["20177348","PLANT $29","Plants",29.0,"GROWING AREA","04/09/2026"],["20173685","PLANT $29.95","Plants",29.95,"GROWING AREA","25/10/2026"],["2001123912345","PLANT $29.99","Plants",29.99,"","25/09/2022"],["20174019","PLANT $30","Plants",30.0,"GROWING AREA","24/10/2026"],["20177423","PLANT $31","Plants",31.0,"GROWING AREA",""],["20178925","PLANT $31.95","Plants",31.95,"","22/10/2026"],["20180157","PLANT $31.99","Plants",31.99,"GROWING AREA","03/11/2019"],["30003330","PLANT $32.95","Plants",32.95,"","14/01/2026"],["20173616","PLANT $33","Plants",33.0,"GONDWANA NURSERY","23/08/2026"],["20181345","PLANT $33.95","Plants",33.95,"","25/09/2025"],["20173692","PLANT $34.95","Plants",34.95,"GROWING AREA","25/10/2026"],["20182748","PLANT $34.99","Plants",34.99,"","06/01/2021"],["30050198","plant $35.95","Plants",35.95,"","17/05/2026"],["20178536","PLANT $36","Plants",36.0,"GROWING AREA","14/10/2026"],["20174309","PLANT $36.95","Plants",36.95,"GROWING AREA","25/10/2026"],["30043244","plant $37.95","Plants",37.95,"","17/10/2025"],["20182762","PLANT $38","Plants",38.0,"GROWING AREA","26/06/2026"],["30048669","plant $38.95","Plants",38.95,"","05/10/2026"],["20177249","PLANT $39","Plants",39.0,"GROWING AREA","30/08/2026"],["20173876","PLANT $39.95","Plants",39.95,"GROWING AREA","25/10/2026"],["20177935","PLANT $40","Plants",40.0,"","06/02/2023"],["20180096","PLANT $42","Plants",42.0,"","13/03/2025"],["30004184","PLANT $42.95","Plants",42.95,"GROWING AREA","12/10/2026"],["20173906","PLANT $44","Plants",44.0,"GROWING AREA","21/10/2026"],["20173326","PLANT $44.95","Plants",44.95,"MALMAR ENTERPRISES","25/10/2026"],["20177447","PLANT $45","Plants",45.0,"BLACKALL","20/09/2024"],["20179083","PLANT $46","Plants",46.0,"","06/09/2026"],["20177041","PLANT $46.95","Plants",46.95,"TROPICAL EXOTICS","21/06/2026"],["20181802","PLANT $47","Plants",47.0,"","14/04/2025"],["30004931","PLANT $47.95","Plants",47.95,"","29/10/2023"],["20177331","PLANT $49","Plants",49.0,"GROWING AREA","25/10/2026"],["20173869","PLANT $49.95","Plants",49.95,"GROWING AREA","24/10/2026"],["20182809","PLANT $49.99","Plants",49.99,"","07/12/2020"],["20174040","PLANT $50","Plants",50.0,"GROWING AREA","30/01/2022"],["30003088","PLANT $51.95","Plants",51.95,"","10/05/2026"],["20174149","PLANT $54.95","Plants",54.95,"GROWING AREA","25/10/2026"],["20177508","PLANT $55","Plants",55.0,"","25/10/2026"],["20182144","PLANT $56","Plants",56.0,"","24/09/2026"],["20179823","PLANT $56.95","Plants",56.95,"","14/10/2026"],["30001398","PLANT $57","Plants",57.0,"","07/09/2021"],["30043251","PLANT $58.95","Plants",58.95,"","22/10/2025"],["20177232","PLANT $59","Plants",59.0,"GROWING AREA","20/10/2026"],["20173883","PLANT $59.95","Plants",59.95,"GROWING AREA","21/10/2026"],["20177461","PLANT $60","Plants",60.0,"BLACKALL","12/08/2023"],["20177768","PLANT $64","Plants",64.0,"BLACKALL","24/10/2026"],["20174156","PLANT $64.95","Plants",64.95,"GROWING AREA","26/09/2026"],["20178901","PLANT $65","Plants",65.0,"GROWING AREA","12/06/2025"],["30004870","PLANT $66.95","Plants",66.95,"TARA VALLEY","06/04/2024"],["30050921","PLANT $67","Plants",67.0,"","13/06/2026"],["30004245","plant $68.00","Plants",68.0,"","19/02/2023"],["20177492","PLANT $69","Plants",69.0,"","16/10/2026"],["20173890","PLANT $69.95","Plants",69.95,"GROWING AREA","24/10/2026"],["20182373","PLANT $69.99","Plants",69.99,"","28/03/2021"],["20179168","PLANT $70","Plants",70.0,"","18/05/2019"],["30000438","PLANT $74","Plants",74.0,"","25/10/2026"],["20174088","PLANT $74.95","Plants",74.95,"GROWING AREA","18/10/2026"],["20182731","PLANT $74.99","Plants",74.99,"",""],["30001138","PLANT $75","Plants",75.0,"","16/04/2026"],["30003194","PLANT $76.95","Plants",76.95,"","16/10/2026"],["30029163","PLANT $77","Plants",77.0,"","17/10/2026"],["20179397","PLANT $79","Plants",79.0,"WENDY IMPORT & EXPORT PTY. LTD","25/10/2026"],["20173449","PLANT $79.95","Plants",79.95,"MALMAR ENTERPRISES","25/10/2026"],["20180201","PLANT $79.99","Plants",79.99,"BUSH GARDEN","09/05/2021"],["20176662","PLANT $80","Plants",80.0,"GROWING AREA","12/06/2023"],["30048676","Plant $82.95","Plants",82.95,"",""],["30033030","PLANT $84","Plants",84.0,"GROWING AREA","25/10/2026"],["30005112","PLANT $84.95","Plants",84.95,"","25/10/2026"],["20181666","PLANT $85","Plants",85.0,"NORTHSIDE NATIVES","05/06/2026"],["30000865","PLANT $86.95","Plants",86.95,"","22/08/2026"],["20174323","PLANT $89","Plants",89.0,"GROWING AREA","08/10/2026"],["20174057","PLANT $89.95","Plants",89.95,"TROPICAL HOUSE PLANTS","25/10/2026"],["20181086","PLANT $90","Plants",90.0,"","02/07/2022"],["20178895","PLANT $94","Plants",94.0,"","18/10/2026"],["20180300","PLANT $94.95","Plants",94.95,"BLACKALL","05/10/2026"],["20182816","PLANT $95","Plants",95.0,"","23/10/2025"],["20177843","PLANT $99","Plants",99.0,"GROWING AREA","25/10/2026"],["20179687","PLANT $99.95","Plants",99.95,"","06/10/2026"],["30053199","Plant $100","Plants",100.0,"GROWING AREA","24/05/2026"],["30053175","Plant $104","Plants",104.0,"GROWING AREA","31/05/2026"],["30001527","PLANT $104.95","Plants",104.95,"",""],["20183301","PLANT $105","Plants",105.0,"","18/01/2021"],["20179403","PLANT $109","Plants",109.0,"GROWING AREA","18/10/2026"],["30001114","PLANT $109.95","Plants",109.95,"","29/12/2025"],["20177867","PLANT $110","Plants",110.0,"GROWING AREA","27/06/2026"],["30004214","PLANT $110.95","Plants",110.95,"FRANGIPANIS OF NOOSA",""],["30019010","Plant $114","Plants",114.0,"GROWING AREA","25/01/2026"],["30003422","PLANT $115","Plants",115.0,"","20/06/2026"],["20179601","PLANT $119","Plants",119.0,"BLACKALL","24/10/2026"],["20180942","PLANT $119.95","Plants",119.95,"","24/12/2025"],["20182069","PLANT $120","Plants",120.0,"","12/11/2022"],["30054189","Plant $124","Plants",124.0,"GROWING AREA","13/10/2026"],["30002609","PLANT $124.95","Plants",124.95,"","25/03/2024"],["20181499","PLANT $125","Plants",125.0,"","23/12/2025"],["20175610","PLANT $129","Plants",129.0,"","25/10/2026"],["20176280","PLANT $129.95","Plants",129.95,"GROWING AREA","30/03/2026"],["30001275","plant $130","Plants",130.0,"GROWING AREA",""],["30000308","PLANT $134","Plants",134.0,"","02/10/2026"],["30001855","PLANT $135","Plants",135.0,"GROWING AREA","06/06/2026"],["20178574","PLANT $139","Plants",139.0,"WESTSIDE NURSERIES","25/10/2026"],["30001268","PLANT $139.95","Plants",139.95,"","13/06/2026"],["30053977","Plant $144","Plants",144.0,"","26/09/2026"],["20179496","PLANT $149","Plants",149.0,"BLACKALL","25/10/2026"],["20175948","PLANT $149.95","Plants",149.95,"BLACKALL","19/10/2025"],["20182236","PLANT $150","Plants",150.0,"","16/12/2023"],["30045729","PLANT $155","Plants",155.0,"","09/12/2025"],["20175870","PLANT $159","Plants",159.0,"GROWING AREA","23/10/2026"],["30002548","PLANT $159.95","Plants",159.95,"","10/05/2025"],["30000261","PLANT $160","Plants",160.0,"",""],["20177881","PLANT $169","Plants",169.0,"GROWING AREA","12/09/2026"],["20176501","PLANT $169.95","Plants",169.95,"","23/07/2025"],["30001282","PLANT $170","Plants",170.0,"GROWING AREA",""],["30042476","Plant $175","Plants",175.0,"","12/11/2025"],["20179892","PLANT $179","Plants",179.0,"","13/06/2026"],["20183455","PLANT $189","Plants",189.0,"","01/10/2026"],["20181314","PLANT $189.95","Plants",189.95,"","08/09/2024"],["30004825","PLANT $190","Plants",190.0,"","29/11/2023"],["30005334","PLANT $195","Plants",195.0,"","20/12/2024"],["20176976","PLANT $199","Plants",199.0,"BLACKALL","08/06/2025"],["20181659","PLANT $199.95","Plants",199.95,"","24/03/2024"],["30002593","PLANT $209","Plants",209.0,"BLACKALL","12/10/2026"],["30032811","PLANT $209.95","Plants",209.95,"",""],["30001169","PLANT $219","Plants",219.0,"","11/10/2026"],["20181482","PLANT $220","Plants",220.0,"BLACKALL","25/11/2021"],["30050594","PLANT $225","Plants",225.0,"","21/03/2026"],["30001480","PLANT $229","Plants",229.0,"GROWING AREA","17/10/2026"],["20182779","PLANT $234.95","Plants",234.95,"",""],["30050600","plant $235","Plants",235.0,"","10/04/2026"],["30001954","PLANT $239","Plants",239.0,"BLACKALL","10/10/2026"],["30004955","PLANT $239.95","Plants",239.95,"",""],["30004894","PLANT $245","Plants",245.0,"","08/03/2024"],["20177904","plant $259","Plants",259.0,"GROWING AREA","25/09/2026"],["30001602","PLANT $265","Plants",265.0,"",""],["30000858","PLANT $269","Plants",269.0,"","16/10/2026"],["30004221","PLANT $275","Plants",275.0,"","12/04/2026"],["30045736","PLANT $279","Plants",279.0,"","10/06/2026"],["30004474","PLANT $279.95","Plants",279.95,"GROWING AREA","20/01/2025"],["30020252","plant $295","Plants",295.0,"GROWING AREA",""],["20180119","plant $299","Plants",299.0,"BLACKALL","26/06/2026"],["20182243","PLANT $319","Plants",319.0,"","19/11/2025"],["30004481","PLANT $319.95","Plants",319.95,"GROWING AREA","22/04/2023"],["20181567","PLANT $320","Plants",320.0,"WHOLESALE NURSERIES","10/08/2020"],["30053854","PLANT $325","Plants",325.0,"GROWING AREA","25/10/2026"],["30051935","PLANT $329","Plants",329.0,"","29/04/2026"],["30005075","PLANT $339","Plants",339.0,"","20/08/2026"],["20180218","PLANT $349","Plants",349.0,"NATIVES R US","19/09/2026"],["20180126","PLANT $350","Plants",350.0,"BLACKALL",""],["20182083","PLANT $355","Plants",355.0,"GROWING AREA",""],["20181550","PLANT $359","Plants",359.0,"WHOLESALE NURSERIES",""],["20179939","PLANT $369","Plants",369.0,"",""],["30009325","Plant $389","Plants",389.0,"GROWING AREA","25/07/2025"],["30003255","PLANT $395","Plants",395.0,"","14/05/2022"],["30002500","PLANT $399","Plants",399.0,"","05/02/2024"],["20181543","PLANT $439","Plants",439.0,"",""],["30016996","PLANT $449","Plants",449.0,"",""],["30004900","PLANT $459","Plants",459.0,"","21/09/2024"],["30054448","PLANT $469","Plants",469.0,"","18/10/2026"],["30004238","PLANT $479","Plants",479.0,"","13/02/2023"],["30044098","PLANT $489","Plants",489.0,"",""],["30047495","PLANT $499","Plants",499.0,"",""],["30053304","Plant $529","Plants",529.0,"GROWING AREA","18/10/2026"],["20179373","PLANT $559","Plants",559.0,"",""],["30053960","PLANT $579","Plants",579.0,"GROWING AREA",""],["30054455","PLANT $599","Plants",599.0,"",""],["20179922","PLANT $649","Plants",649.0,"BLACKALL",""],["30054462","PLANT $659","Plants",659.0,"",""],["30054479","PLANT $729","Plants",729.0,"",""],["30054493","Plant $749","Plants",749.0,"GROWING AREA",""],["30054554","Plant $759","Plants",759.0,"GROWING AREA",""],["30046948","Plant $799","Plants",799.0,"",""],["30054486","PLANT $995","Plants",995.0,"GROWING AREA",""],["30047341","Plant $1099","Plants",1099.0,"","23/11/2025"],["30054042","Plant $1680","Plants",1680.0,"GROWING AREA",""]]};
+</script>
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+             set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+
+/* ---------------- Code 128 (auto set B / C) ---------------- */
+const C128=["212222","222122","222221","121223","121322","131222","122213","122312","132212","221213","221312","231212","112232","122132","122231","113222","123122","123221","223211","221132","221231","213212","223112","312131","311222","321122","321221","312212","322112","322211","212123","212321","232121","111323","131123","131321","112313","132113","132311","211313","231113","231311","112133","112331","132131","113123","113321","133121","313121","211331","231131","213113","213311","213131","311123","311321","331121","312113","312311","332111","314111","221411","431111","111224","111422","121124","121421","141122","141221","112214","112412","122114","122411","142112","142211","241211","221114","413111","241112","134111","111242","121142","121241","114212","124112","124211","411212","421112","421211","212141","214121","412121","111143","111341","131141","114113","114311","411113","411311","113141","114131","311141","411131","211412","211214","211232","2331112"];
+function c128codes(txt){
+  const codes=[]; let i=0;
+  const digitRun=p=>{let n=0;while(p+n<txt.length&&txt[p+n]>="0"&&txt[p+n]<="9")n++;return n};
+  let set=null;
+  // start in C when the text opens with 4+ digits (or is all an even run of 2+)
+  const r0=digitRun(0);
+  if(r0>=4||(r0===txt.length&&r0>=2&&r0%2===0)){set="C";codes.push(105)}else{set="B";codes.push(104)}
+  while(i<txt.length){
+    if(set==="C"){
+      const r=digitRun(i);
+      if(r>=2){codes.push(+txt.substr(i,2));i+=2;continue}
+      codes.push(100);set="B";continue;
+    }
+    const r=digitRun(i);
+    if(r>=4&&(r%2===0||i+r===txt.length&&false)){codes.push(99);set="C";continue}
+    if(r>=5){codes.push(txt.charCodeAt(i)-32);i++;continue} // odd run: one in B, rest in C
+    codes.push(txt.charCodeAt(i)-32);i++;
+  }
+  let sum=codes[0];for(let k=1;k<codes.length;k++)sum+=codes[k]*k;
+  codes.push(sum%103);codes.push(106);
+  return codes;
+}
+/* ---------------- stock data ---------------- */
+let ITEMS=[], SOURCE="";
+const priceText=p=>"$"+(Math.round(p*100)%100===0?String(Math.round(p)):p.toFixed(2));
+function index(items){
+  return items.map(a=>({b:a[0],d:a[1],dept:a[2]||"",p:+a[3]||0,last:a[5]||""})).sort((x,y)=>x.p-y.p);
+}
+function useData(src,items){ITEMS=index(items);SOURCE=src;
+  $("#stockInfo").textContent=`${ITEMS.length} plant prices · ${src}`;search();}
+
+
+/* CSV import of a newer Stock Manager export */
+function parseCSV(text){
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===","){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}
+    else f+=c}
+  if(f!==""||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+const MOJI=[["â„¢","™"],["Â®","®"],["Â©","©"],["â€™","’"],["â€˜","‘"],["â€œ","“"],["â€\u009d","”"],["â€“","–"],["â€”","—"],["Ã©","é"],["Â",""]];
+const clean=s=>{s=s||"";for(const[a,b]of MOJI)s=s.split(a).join(b);return s.replace(/\s+/g," ").trim()};
+const SKIPDEPT=new Set(["customer charges","customer payments","deposit","gift voucher","gift vouchers"]);
+function itemsFromCSV(text){
+  const rows=parseCSV(text);const h=rows.shift().map(x=>x.trim().toLowerCase());
+  const col=n=>h.indexOf(n);
+  const ib=col("barcode"),id=col("description"),idep=col("department"),ip=col("retail price"),is=col("supplier code"),il=col("date last sold"),ii=col("inactive");
+  if(ib<0||id<0||ip<0)throw new Error("This file doesn't look like a Stock Manager export (no Barcode / Description / Retail Price columns).");
+  const out=[],seen=new Set(),best=new Map();
+  const when=s=>{const m=/^(\d+)\/(\d+)\/(\d+)$/.exec(s||"");return m?+new Date(+m[3],m[2]-1,+m[1]):0};
+  for(const r of rows){
+    const b=(r[ib]||"").trim(),d=clean(r[id]);
+    if(!b||/^0+$/.test(b)||seen.has(b))continue;
+    if(ii>=0&&r[ii]==="1")continue;
+    if(d.toUpperCase()==="DO NOT USE"||d==="Stock Item Not Found")continue;
+    const dep=clean(r[idep]);if(SKIPDEPT.has(dep.toLowerCase()))continue;
+    if(/[^\x20-\x7e]/.test(b))continue;
+    seen.add(b);
+    const t=dep.toLowerCase().replace(/\b\w/g,m=>m.toUpperCase());
+    // only the "PLANT $x" price items in the Plants department, where the name matches the till price
+    const m=/^plant \$(\d+(?:\.\d{1,2})?)$/i.exec(d),price=Math.round((parseFloat(r[ip])||0)*100)/100;
+    if(!m||t!=="Plants"||price<=0||Math.abs(parseFloat(m[1])-price)>0.001)continue;
+    const row=[b,d,t,price,clean(r[is]),il>=0?r[il]:""],old=best.get(price);
+    if(!old||when(row[5])>when(old[5]))best.set(price,row); // one barcode per price: the most recently sold
+  }
+  return [...best.values()];
+}
+$("#loadCsvBtn").onclick=()=>$("#csvFile").click();
+$("#csvFile").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{try{
+      let text;try{text=new TextDecoder("utf-8",{fatal:true}).decode(rd.result)}catch(e){text=new TextDecoder("windows-1252").decode(rd.result)}
+      const items=itemsFromCSV(text.replace(/^\uFEFF/,""));
+      if(!items.length)throw new Error("No PLANT $ prices found in that file.");
+      const src=`${f.name.replace(/\.csv$/i,"")}`;
+      const saved=store.set("plantPrices",{source:src,items});
+      useData(src,items);
+      toast(saved?`Loaded ${items.length} plant prices`:`Loaded ${items.length} plant prices (for this session only)`);
+    }catch(err){toast(err.message,5000)}};
+  rd.readAsArrayBuffer(f);e.target.value="";
+};
+
+/* ---------------- search ---------------- */
+let results=[]; let selIdx=-1; let current=null;
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=priceText;
+function search(){
+  const raw=$("#q").value.trim();const ql=raw.toLowerCase().replace(/plants?|\$|\s/g,"");
+  let list=ITEMS;let exact=-1;
+  if(ql){
+    const bc=ITEMS.find(it=>it.b.toLowerCase()===raw.toLowerCase());
+    if(bc)list=[bc];
+    else list=ITEMS.filter(it=>priceText(it.p).slice(1).startsWith(ql)||it.p.toFixed(2).startsWith(ql));
+  }
+  results=list;
+  const ul=$("#results");
+  if(!results.length){ul.innerHTML=`<li class="empty">There's no PLANT $${esc(ql)} in the till. Add it in the POS first, then load a new export.</li>`;selIdx=-1;return}
+  ul.innerHTML=results.map((it,i)=>`<li data-i="${i}"><span class="p">${priceText(it.p)}</span><span class="m">${esc(it.b)}</span></li>`).join("");
+  selIdx=-1;
+  const n=parseFloat(ql);
+  if(list.length===1&&ql)exact=0;else if(ql&&!isNaN(n))exact=results.findIndex(it=>Math.abs(it.p-n)<0.001&&(ql.includes(".")||Number.isInteger(it.p)));
+  if(exact>=0)choose(exact);
+}
+let tmr;$("#q").addEventListener("input",()=>{clearTimeout(tmr);tmr=setTimeout(search,90)});
+$("#q").addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"||e.key==="ArrowRight"&&!e.target.value){e.preventDefault();choose(Math.min(results.length-1,selIdx+1),true)}
+  else if(e.key==="ArrowUp"){e.preventDefault();choose(Math.max(0,selIdx-1),true)}
+  else if(e.key==="Enter"){e.preventDefault();clearTimeout(tmr);search();if(selIdx<0&&results.length===1)choose(0);if(current){$("#qty").focus();$("#qty").select()}}
+});
+$("#results").addEventListener("click",e=>{const li=e.target.closest("li[data-i]");if(li)choose(+li.dataset.i)});
+function choose(i,keepFocus){
+  if(i<0||!results[i])return;selIdx=i;current=results[i];
+  document.querySelectorAll("#results li.sel").forEach(x=>x.classList.remove("sel"));
+  const li=document.querySelector(`#results li[data-i="${i}"]`);if(li){li.classList.add("sel");li.scrollIntoView({block:"nearest"})}
+  $("#qty").value=1;renderPreview();
+  $("#printNow").disabled=false;$("#addQueue").disabled=false;
+}
+
+/* ---------------- the sticker (drawn at the GK420t's 203 dpi: 320 x 224 dots) ---------------- */
+const W=320,H=224,DPMM=203/25.4,FONT='"TagSans",Arial,sans-serif';
+// Draw the sticker artwork. S = how many canvas pixels per printer dot (1 dot = 1/203 inch).
+function drawArt(it,S){
+  const c=document.createElement("canvas");c.width=W*S;c.height=H*S;const x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,W*S,H*S);x.fillStyle="#000";x.textBaseline="alphabetic";
+  const mm=v=>v*DPMM,px=15,py=12,iw=W-2*px;
+  const meas=(t,size,weight,sp)=>{x.font=`${weight} ${size*S}px ${FONT}`;x.letterSpacing=(sp*S)+"px";const w=(x.measureText(t).width-sp*S)/S;x.letterSpacing="0px";return w};
+  const text=(t,size,weight,spacing,xx,yy,align,color)=>{ // all sizes in printer dots
+    const w=meas(t,size,weight,spacing);x.font=`${weight} ${size*S}px ${FONT}`;x.letterSpacing=(spacing*S)+"px";
+    const left=align==="center"?xx-w/2:align==="right"?xx-w:xx;
+    if(color)x.fillStyle=color;x.fillText(t,left*S,yy*S);x.fillStyle="#000";x.letterSpacing="0px";return w;
+  };
+  const barcode=(top,h,maxDots,x0,bw)=>{ // whole printer dots per bar module, centred in its space
+    x0=x0==null?px:x0;bw=bw||iw;
+    const codes=c128codes(it.b);let mods=0;for(const cd of codes)for(const ch of C128[cd])mods+=+ch;
+    const dots=Math.max(1,Math.min(maxDots,Math.floor(bw/mods)));let bx=Math.round(x0+(bw-mods*dots)/2);
+    for(const cd of codes){const pat=C128[cd];for(let k=0;k<pat.length;k++){const n=+pat[k]*dots;if(k%2===0)x.fillRect(bx*S,top*S,n*S,h*S);bx+=n}}
+  };
+  const price=(top,bottom,maxP,x0,pw,align)=>{ // as big as fits in the box, small $ and cents
+    x0=x0==null?px:x0;pw=pw||iw;
+    const [dl,ct]=it.p.toFixed(2).split("."),showC=ct!=="00";let P=Math.min(maxP,(bottom-top)/0.72),wd,wc,w$;
+    for(let k=0;k<30;k++){wd=meas(dl,P,500,-P*0.02);wc=showC?meas("."+ct,P*0.46,500,0):0;w$=meas("$",P*0.48,400,0);
+      if(w$+2+wd+(showC?2:0)+wc<=pw)break;P*=0.95}
+    const cap=P*0.72,total=w$+2+wd+(showC?2:0)+wc;let lx=align==="right"?x0+pw-total:align==="left"?x0:x0+(pw-total)/2;const base=Math.round((top+bottom+cap)/2);
+    text("$",P*0.48,400,0,lx,base-cap+P*0.48*0.72,"left");lx+=w$+2;
+    x.font=`500 ${P*S}px ${FONT}`;x.letterSpacing=(-P*0.02*S)+"px";x.fillText(dl,lx*S,base*S);x.letterSpacing="0px";lx+=wd+2;
+    if(showC)text("."+ct,P*0.46,500,0,lx,base-cap+P*0.46*0.72,"left");
+    return {base,cap,left:align==="right"?x0+pw-total:align==="left"?x0:x0+(pw-total)/2,P};
+  };
+  const footer=(fb,fs)=>{ // barcode number on the left, shop name on the right, shrunk if they'd touch
+    const fx=11,fw=W-2*fx; // footer runs a little wider than the rest so it can be bigger
+    for(let k=0;k<12&&meas(it.b,fs,600,1.2)+meas("THE PLANT SHACK",fs,600,1.1)+10>fw;k++)fs*=0.95;
+    text(it.b,fs,600,1.2,fx,fb,"left");text("THE PLANT SHACK",fs,600,1.1,W-fx,fb,"right");return fs;
+  };
+  // layout: price on top, PLANT under it, barcode, then barcode number and shop name
+  const fb=H-py+3,fs=footer(fb,mm(2.35));
+  const bh=Math.round(mm(5.6)),bt=fb-Math.round(fs*0.75)-5-bh;barcode(bt,bh,3);
+  const ps=mm(2.4),pb=bt-6;text("PLANT",ps,500,ps*0.45,W/2,pb,"center");
+  price(py,pb-Math.round(ps*0.72)-7,mm(13));
+  return c;
+}
+// The printed version: drawn 4x larger, then shrunk to the printer's 320 x 224 dots so the
+// edges land on the right dots, then made pure black and white the way a thermal printer prints.
+function drawSticker(it){
+  const S=4,big=drawArt(it,S),bd=big.getContext("2d").getImageData(0,0,W*S,H*S).data;
+  const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const img=x.createImageData(W,H),d=img.data;
+  for(let yy=0;yy<H;yy++)for(let xx=0;xx<W;xx++){
+    let sum=0;for(let a=0;a<S;a++){const row=((yy*S+a)*W*S+xx*S)*4;for(let b=0;b<S;b++)sum+=bd[row+b*4]}
+    const v=sum/(S*S)<140?0:255,o=(yy*W+xx)*4;d[o]=d[o+1]=d[o+2]=v;d[o+3]=255}
+  x.putImageData(img,0,0);return c;
+}
+function toZPL(c,qty){
+  const d=c.getContext("2d").getImageData(0,0,W,H).data,bpr=W/8;let hex="";
+  for(let yy=0;yy<H;yy++)for(let b=0;b<bpr;b++){let v=0;for(let k=0;k<8;k++){if(d[((yy*W)+b*8+k)*4]<128)v|=128>>k}hex+=(v<16?"0":"")+v.toString(16).toUpperCase()}
+  const n=bpr*H;return `^XA^PW${W}^LL${H}^LH0,0^FO0,0^GFA,${n},${n},${bpr},${hex}^FS^PQ${qty},0,1,Y^XZ\n`;
+}
+window.__sticker={drawArt,drawSticker,items:()=>ITEMS};
+let fontsReady=false;
+(document.fonts?Promise.all([document.fonts.load(`400 24px ${FONT}`),document.fonts.load(`500 24px ${FONT}`)]):Promise.resolve()).catch(()=>{}).then(()=>{fontsReady=true;renderPreview()});
+function renderPreview(){
+  const box=$("#preview");if(!current||!fontsReady)return;
+  const img=new Image();img.src=drawArt(current,4).toDataURL();img.alt=`Sticker for Plant ${priceText(current.p)}`;
+  img.width=Math.min(W*2,box.clientWidth-36);box.innerHTML="";box.appendChild(img);box.style.height="";
+}
+
+/* ---------------- printing through Zebra Browser Print ---------------- */
+const BP=["http://127.0.0.1:9100","https://127.0.0.1:9101"];let bpBase=null,printer=null,lastErr="";
+async function bpFetch(path,opts,ms){
+  const errs=[];
+  for(const base of bpBase?[bpBase]:BP){
+    const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),ms||4000);
+    try{const r=await fetch(base+path,Object.assign({headers:{"Content-Type":"text/plain;charset=UTF-8"},signal:ctl.signal},opts));
+      clearTimeout(t);if(r.ok){bpBase=base;return r}errs.push(`${base}: answered ${r.status}`)}
+    catch(e){clearTimeout(t);errs.push(`${base}: ${e.name==="AbortError"?"no answer after "+((ms||4000)/1000)+"s":"blocked or not running"}`)}
+  }
+  bpBase=null;lastErr=errs.join(" · ");throw new Error(lastErr);
+}
+function setStatus(cls,text,detail){const el=$("#printerStatus");el.className="pstat "+cls;el.textContent=text;
+  $("#printerDetail").textContent=detail||"";$("#printerDetail").hidden=!detail;$("#fallback").hidden=cls!=="bad"||!!window.TRIAL||printers.length>0}
+let checking=false,printers=[];
+function fillPicker(){
+  const sel=$("#printerPick");sel.innerHTML=`<option value="">Choose a printer…</option>`+printers.map(p=>`<option>${esc(p.name)}</option>`).join("");
+  $("#pickRow").hidden=!printers.length;
+}
+$("#printerPick").addEventListener("change",e=>{const p=printers.find(x=>x.name===e.target.value);
+  if(p){store.set("printerName",p.name);printer=p;setStatus("ok",`Ready: ${p.name}`,"Saved on this computer.")}else{printer=null;setStatus("bad","Choose the sticker printer below.")}});
+async function findPrinter(){
+  if(window.TRIAL){setStatus("bad","Trial version: printing works on the shop computer.");return null}
+  if(checking)return printer;checking=true;
+  setStatus("","Looking for the Zebra printer…");$("#recheck").disabled=true;
+  try{
+    let list=[];
+    const r=await bpFetch("/available");
+    try{const j=await r.json();list=(j.printer||[]).filter(p=>p&&p.name)}catch(e){}
+    if(!list.length){try{const r2=await bpFetch("/default?type=printer");const t=await r2.text();const d=t?JSON.parse(t):null;if(d&&d.name)list=[d]}catch(e){}}
+    printers=list;fillPicker();
+    if(!list.length){printer=null;setStatus("bad","Browser Print is running, but it can't see any printers.","Check the GK420t is on and plugged in, then press Check again.");return null}
+    // the chosen printer: the one picked on this computer before, otherwise one with GK420 in its name
+    const saved=store.get("printerName",null);
+    const dev=list.find(p=>p.name===saved)||(list.filter(p=>/gk420/i.test(p.name)).length===1?list.find(p=>/gk420/i.test(p.name)):null);
+    if(!dev){printer=null;$("#printerPick").value="";setStatus("bad","Choose the sticker printer below.","Pick the Zebra GK420t (the small 40 × 28 mm label printer). This computer will remember it.");return null}
+    printer=dev;$("#printerPick").value=dev.name;setStatus("ok",`Ready: ${dev.name}`,`Checked ${new Date().toLocaleTimeString()}`);return dev;
+  }catch(e){printer=null;printers=[];fillPicker();
+    setStatus("bad","Can't talk to Zebra Browser Print.",
+      `Check Browser Print is running (its icon is near the clock). If Chrome or Browser Print asked to allow this page, choose Allow. Then press Check again. Details: ${e.message}`);return null}
+  finally{checking=false;$("#recheck").disabled=false}
+}
+$("#recheck").onclick=findPrinter;
+/* backup: Chrome's own print box, through the Zebra's Windows driver */
+function printWithDialog(jobs){
+  const area=$("#printArea");area.innerHTML="";
+  for(const{it,qty}of jobs){const src=drawArt(it,4).toDataURL();for(let i=0;i<qty;i++){const d=document.createElement("div");d.className="label";d.innerHTML=`<img src="${src}" alt="">`;area.appendChild(d)}}
+  setTimeout(()=>window.print(),100);
+}
+let printing=false,lastJobs=null;
+async function printLabels(jobs){
+  const n=jobs.reduce((a,j)=>a+j.qty,0);if(!n||printing)return;
+  if(window.TRIAL){toast(`Trial: this would print ${n} sticker${n>1?"s":""}. Printing works on the shop computer.`,4000);return}
+  if(n>300){toast("That's more than 300 stickers. Print them in smaller batches.",4000);return}
+  lastJobs=jobs;printing=true;
+  try{
+    const dev=printer||await findPrinter();
+    if(!dev){toast("Choose the sticker printer in the Printer box first.",4000);return}
+    const zpl=jobs.map(j=>toZPL(drawSticker(j.it),j.qty)).join("");
+    await bpFetch("/write",{method:"POST",body:JSON.stringify({device:dev,data:zpl})},15000);
+    toast(`Printing ${n} sticker${n>1?"s":""}`);
+  }catch(e){printer=null;await findPrinter();toast("Couldn't print. See the Printer box for what to do, or use the print box instead.",5000)}
+  finally{printing=false;$("#q").focus();$("#q").select()}
+}
+$("#fallback").onclick=()=>{const jobs=lastJobs||(current?[{it:current,qty:qtyVal()}]:null);if(jobs)printWithDialog(jobs);else toast("Pick a price first")};
+const qtyVal=()=>Math.max(1,Math.min(300,parseInt($("#qty").value,10)||1));
+$("#minus").onclick=()=>{$("#qty").value=Math.max(1,qtyVal()-1)};
+$("#plus").onclick=()=>{$("#qty").value=qtyVal()+1};
+$("#qty").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#printNow").click()}});
+$("#printNow").onclick=()=>{if(current)printLabels([{it:current,qty:qtyVal()}])};
+
+/* print list */
+let queue=[];
+function saveQueue(){store.set("queue",queue.map(q=>({b:q.it.b,qty:q.qty})))}
+function renderQueue(){
+  const ul=$("#queue");
+  ul.innerHTML=queue.map((q,i)=>`<li><span class="d">Plant ${money(q.it.p)}<span class="m">${esc(q.it.b)}</span></span>
+    <input type="number" min="1" max="500" value="${q.qty}" data-i="${i}" aria-label="Stickers for ${esc(q.it.d)}"><button class="x" data-x="${i}" aria-label="Remove ${esc(q.it.d)}">×</button></li>`).join("");
+  const total=queue.reduce((a,q)=>a+q.qty,0);
+  $("#queueEmpty").hidden=queue.length>0;$("#printQueue").disabled=!queue.length;$("#clearQueue").disabled=!queue.length;
+  $("#queueCount").textContent=queue.length?`${queue.length} item${queue.length>1?"s":""}, ${total} sticker${total>1?"s":""}`:"";
+}
+$("#queue").addEventListener("input",e=>{const i=e.target.dataset.i;if(i!=null){queue[i].qty=Math.max(1,Math.min(500,parseInt(e.target.value,10)||1));saveQueue();
+  const total=queue.reduce((a,q)=>a+q.qty,0);$("#queueCount").textContent=`${queue.length} item${queue.length>1?"s":""}, ${total} sticker${total>1?"s":""}`}});
+$("#queue").addEventListener("click",e=>{const x=e.target.dataset.x;if(x!=null){queue.splice(+x,1);saveQueue();renderQueue()}});
+$("#addQueue").onclick=()=>{if(!current)return;const ex=queue.find(q=>q.it.b===current.b);
+  if(ex)ex.qty+=qtyVal();else queue.push({it:current,qty:qtyVal()});saveQueue();renderQueue();toast("Added to print list");$("#q").focus();$("#q").select()};
+$("#clearQueue").onclick=()=>{queue=[];saveQueue();renderQueue()};
+$("#printQueue").onclick=()=>printLabels(queue);
+
+let tt;function toast(msg,ms){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),ms||1800)}
+
+findPrinter();
+const loaded=store.get("plantPrices",null);
+if(loaded&&loaded.items&&loaded.items.length)useData(loaded.source,loaded.items);else useData(EMBEDDED.source,EMBEDDED.items);
+queue=store.get("queue",[]).map(q=>({it:ITEMS.find(x=>x.b===q.b),qty:q.qty})).filter(q=>q.it);
+renderQueue();
+// open with an example so the sticker preview isn't empty
+if(!current&&results.length){const ex=results.findIndex(it=>Math.abs(it.p-14.95)<0.001);choose(ex>=0?ex:0)}
+})();
+</script>
+</body>
+</html>
