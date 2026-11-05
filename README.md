@@ -6,6 +6,6 @@ A web page staff use to print "PLANT $" price stickers on the Zebra GK420t (40 Ã
 - Zebra Browser Print must be installed and running on that computer.
 - Choose the sticker printer once in the Printer box. Each computer remembers its own choice.
 
-Prices come from the Stock Manager export: only items named exactly `PLANT $<price>` (Plants tab) and `POT $<price>` (Pots tab) from any department, with an All tab showing every "WORD $<price>" price item (Decor, Saucer, Garden Care and so on). To update them, export from Stock Manager and click **Load a newer stock export** on the page (that computer only), or replace the price list in `index.html` so every computer gets it.
+Prices come from the Stock Manager export: only items named exactly `PLANT $<price>` (Plants tab) and `POT $<price>` (Pots tab) from any department, with an All tab that searches everything in the till by name, price or barcode. To update them, export from Stock Manager and click **Load a newer stock export** on the page (that computer only), or replace the price list in `index.html` so every computer gets it.
 
 `plant-prices.csv` is the cleaned price list the page was built from.
